@@ -1,0 +1,3 @@
+*.pyc
+api_key*
+dbconnection*

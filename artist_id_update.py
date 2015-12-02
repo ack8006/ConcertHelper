@@ -3,7 +3,6 @@ from api_keys import echo_nest_api
 from contextlib import closing
 from time import sleep
 import requests
-import sys
 
 
 def get_artist_ids(alt_id='spotify'):

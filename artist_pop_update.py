@@ -13,9 +13,21 @@ import psycopg2
 def get_artists_to_update():
     conn = start_db_connection()
     with closing(conn.cursor()) as cur:
-        cur.execute('''SELECT name, spotify_id, echo_nest_id FROM artists
-                    WHERE (spotify_id IS NOT NULL AND spotify_id <> 'n/a') OR
-                    (echo_nest_id IS NOT NULL AND echo_nest_id <> 'n/a')''')
+        #SELECTS all artists that have either never been update or haven't been
+        #updated in greater than 7 days
+        cur.execute('''SELECT name, spotify_id, echo_nest_id FROM
+                    (SELECT DISTINCT ON (a.name)
+                    a.name, a.spotify_id, a.echo_nest_id, MAX(ap.update_date)
+                    FROM artists a
+                    LEFT JOIN artist_popularity ap
+                    ON a.name = ap.name
+                    WHERE (ap.name IS NULL AND
+                    ((a.spotify_id IS NOT NULL AND a.spotify_id <> 'n/a') OR
+                    (a.echo_nest_id IS NOT NULL AND a.echo_nest_id <> 'n/a')))
+                    OR ap.name IS NOT NULL
+                    GROUP BY a.name) as foo
+                    WHERE max < now()-'7 days'::interval OR max IS NULL;
+                    ''')
         data = cur.fetchall()
     conn.close()
     return data
@@ -35,7 +47,13 @@ def build_urls(ar_inf):
     return urls
 
 def request_data(url):
-    r = requests.get(url)
+    try:
+        r = requests.get(url)
+    except requests.exceptions.ConnectionError as e:
+        print url
+        print e
+        #print e.args[0].reason
+
     if r.status_code == 200:
         return r.json()
     else:
@@ -47,7 +65,8 @@ def request_data(url):
 def loop_through_artists(artists):
     all_popularity_data = []
     for artist in artists:
-        sleep(4)
+        #sleep(4)
+        sleep(3)
         pop_data = {}
         urls = build_urls(artist)
         if urls['spotify']:

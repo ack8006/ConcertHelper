@@ -91,11 +91,12 @@ def upload_venue_capacity(venues):
             conn.commit()
         conn.close()
 
-
-
-if __name__ == '__main__':
+def run():
     venues = request_id(get_venues_to_update())
     upload_venue_capacity(venues)
+
+if __name__ == '__main__':
+    run()
 
 
 

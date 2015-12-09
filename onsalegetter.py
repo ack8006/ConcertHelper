@@ -5,6 +5,8 @@ from contextlib import closing
 from datetime import datetime
 import psycopg2
 
+#***********REFACTORS********
+# Too many db openings and closings
 
 #test only file
 def test_json():
@@ -42,62 +44,70 @@ def get_artist_data(listing):
 def get_venue_data(listing):
     return [x['venue'] for x in listing]
 
-
-def upload_event_to_db(li):
-    #table_queries = {'events': ['''INSERT INTO events (bit_event_id, artists,
-    #                 event_date, onsale_date, bit_venue_id) VALUES(%s,%s,%s,%s,%s)''',
-    #                 (li['bit_event_id'], li['artists'], li['event_date'],
-    #                  li['onsale_date'], li['bit_venue_id'])],
-    #                 'artists': ['''INSERT INTO artists (name, mbid, bit_url) VALUES
-    #                 (%s,%s,%s)''', (li['name'], li['mbid'], li['url'])],
-    #                 'venues': None
-    #                 }
+def upload_events_to_db(event_data):
     conn = start_db_connection()
     with closing(conn.cursor()) as cur:
-        try:
-            cur.execute('''INSERT INTO events (bit_event_id, artists, event_date,
-                        onsale_date, bit_venue_id) VALUES (%s,%s,%s,%s,%s)''',
-                        (li['bit_event_id'], li['artists'], li['event_date'],
-                         li['onsale_date'], li['bit_venue_id']))
-            conn.commit()
-            print 'Uploaded'
-        except psycopg2.IntegrityError as e:
-            conn.rollback()
-            print e
+        for li in event_data:
+            try:
+                cur.execute('''INSERT INTO events (bit_event_id, event_date,
+                            onsale_date, bit_venue_id, uploaded_date) VALUES (%s,
+                            %s,%s,%s,%s)''', (li['bit_event_id'],
+                                li['event_date'], li['onsale_date'],
+                                li['bit_venue_id'], str(datetime.now())))
+                for artist in li['artists']:
+                    cur.execute('''INSERT INTO event_artists (bit_event_id,
+                                artist) VALUES (%s,%s)''', (li['bit_event_id'],
+                                                            artist))
+                conn.commit()
+                print 'Uploaded'
+            except psycopg2.IntegrityError as e:
+                conn.rollback()
+                #print e
     conn.close()
 
-def upload_artist_to_db(ar):
+def upload_artists_to_db(artist_data):
     conn = start_db_connection()
     with closing(conn.cursor()) as cur:
-        try:
-            cur.execute('''INSERT INTO artists (name, mbid, bit_url) VALUES
-                        (%s,%s,%s)''', (ar['name'], ar['mbid'], ar['url']))
-            conn.commit()
-            print 'Added %s' %(ar['name'])
-        except psycopg2.IntegrityError as e:
-            conn.rollback()
-            print e
+        for ar in artist_data:
+            try:
+                cur.execute('''INSERT INTO artists (name, mbid, bit_url) VALUES
+                            (%s,%s,%s)''', (ar['name'], ar['mbid'], ar['url']))
+                conn.commit()
+                print 'Added %s' %(ar['name'])
+            except psycopg2.IntegrityError as e:
+                conn.rollback()
+                print e
     conn.close()
 
-def upload_venue_to_db(vn):
+def upload_venues_to_db(venue_data):
     conn = start_db_connection()
     with closing(conn.cursor()) as cur:
-        try:
-            cur.execute('''INSERT INTO venues (bit_venue_id, name, venue_city,
-                        venue_state, bit_url) VALUES (%s,%s,%s,%s,%s)''',
-                        (vn['id'],vn['name'],vn['city'],vn['region'],vn['url']))
-            conn.commit()
-            print 'Venue %s Added' %(vn['name'])
-        except psycopg2.IntegrityError as e:
-            conn.rollback()
-            print e
+        for vn in venue_data:
+            try:
+                cur.execute('''INSERT INTO venues (bit_venue_id, name, venue_city,
+                            venue_state, bit_url,latitude,longitude) VALUES (%s,
+                            %s,%s,%s,%s,%s,%s)''', (vn['id'],vn['name'],vn['city'],
+                                        vn['region'],vn['url'],vn['latitude'],
+                                        vn['longitude']))
+                conn.commit()
+                print 'Venue %s Added' %(vn['name'])
+            except psycopg2.IntegrityError as e:
+                conn.rollback()
+                print e
     conn.close()
 
 
-if __name__ == '__main__':
+def run():
     r_json = get_requested_json(request_page(make_onsale_url('new%20york,ny', 'YOUR_APP_ID')))
     #r_json = test_json()
 
-    map(lambda x: upload_event_to_db(x), get_event_data(r_json))
-    map(lambda x: upload_artist_to_db(x), get_artist_data(r_json))
-    map(lambda x: upload_venue_to_db(x), get_venue_data(r_json))
+    upload_events_to_db(get_event_data(r_json))
+    upload_artists_to_db(get_artist_data(r_json))
+    upload_venues_to_db(get_venue_data(r_json))
+    #map(lambda x: upload_event_to_db(x), get_event_data(r_json))
+    #map(lambda x: upload_artist_to_db(x), get_artist_data(r_json))
+    #map(lambda x: upload_venue_to_db(x), get_venue_data(r_json))
+
+
+if __name__ == '__main__':
+    run()

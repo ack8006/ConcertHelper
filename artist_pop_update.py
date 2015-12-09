@@ -115,10 +115,13 @@ def upload_popularity_data(popularity_data):
     conn.close()
 
 
-if __name__ == '__main__':
+def run():
     artists = get_artists_to_update()
     all_popularity_data = loop_through_artists(artists)
     upload_popularity_data(all_popularity_data)
+
+if __name__ == '__main__':
+    run()
 
 
 

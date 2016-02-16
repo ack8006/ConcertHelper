@@ -15,19 +15,17 @@ def get_artists_to_update():
     with closing(conn.cursor()) as cur:
         #SELECTS all artists that have either never been update or haven't been
         #updated in greater than 7 days
-        cur.execute('''SELECT name, spotify_id, echo_nest_id FROM
-                    (SELECT DISTINCT ON (a.name)
-                    a.name, a.spotify_id, a.echo_nest_id, MAX(ap.update_date)
-                    FROM artists a
-                    LEFT JOIN artist_popularity ap
-                    ON a.name = ap.name
-                    WHERE (ap.name IS NULL AND
-                    ((a.spotify_id IS NOT NULL AND a.spotify_id <> 'n/a') OR
-                    (a.echo_nest_id IS NOT NULL AND a.echo_nest_id <> 'n/a')))
-                    OR ap.name IS NOT NULL
-                    GROUP BY a.name) as foo
-                    WHERE max < now()-'7 days'::interval OR max IS NULL;
-                    ''')
+
+        cur.execute('''SELECT id, name, spotifyid, echonestid FROM
+                    (SELECT DISTINCT ON (a.id) a.id, a.name, a.spotifyid,
+                    a.echonestid, MAX(pp.update_date)
+                    FROM artist a LEFT JOIN popularity_point pp
+                    on a.id=pp.artist_id
+                    WHERE (a.spotifyid IS NOT NULL AND a.spotifyid <> 'n/a') OR
+                    (a.echonestid IS NOT NULL AND a.echonestid <> 'n/a')
+                    GROUP BY a.id, a.name, a.spotifyid, a.echonestid) as foo
+                    WHERE (MAX IS NULL OR max < now()-'7 days'::interval);''')
+
         data = cur.fetchall()
     conn.close()
     return data
@@ -35,13 +33,13 @@ def get_artists_to_update():
 #takes data tuple
 def build_urls(ar_inf):
     urls = {}
-    if ar_inf[2] != 'n/a':
+    if ar_inf[3] != 'n/a':
         urls['echonest'] = ('http://developer.echonest.com/api/v4/artist/hotttnesss?api_key'
-                '=%s&id=%s&format=json' %(echo_nest_api, ar_inf[2]))
+                '=%s&id=%s&format=json' %(echo_nest_api, ar_inf[3]))
     else:
         urls['echonest'] = None
-    if ar_inf[1] != 'n/a':
-        urls['spotify'] = 'https://api.spotify.com/v1/artists/%s' %(ar_inf[1])
+    if ar_inf[2] != 'n/a':
+        urls['spotify'] = 'https://api.spotify.com/v1/artists/%s' %(ar_inf[2])
     else:
         urls['spotify'] = None
     return urls
@@ -75,11 +73,11 @@ def loop_through_artists(artists):
         else:
             pop_data['spotify_popularity'],pop_data['spotify_followers'] = None,None
         if urls['echonest']:
-            pop_data['hotttnesss'] = parse_echonest(request_data(urls['echonest']))
+            pop_data['echonest_hotttnesss'] = parse_echonest(request_data(urls['echonest']))
         else:
-            pop_data['hotttnesss'] = None
+            pop_data['echonest_hotttnesss'] = None
         if pop_data:
-            pop_data['name'], pop_data['spotify_id'], pop_data['echo_nest_id'] = artist
+            pop_data['id'], pop_data['name'], pop_data['spotify_id'], pop_data['echo_nest_id'] = artist
         all_popularity_data.append(pop_data)
         print 'Downloaded: ' + pop_data['name']
     return all_popularity_data
@@ -99,42 +97,36 @@ def parse_echonest(data):
 def upload_popularity_data(popularity_data):
     conn = start_db_connection()
     with closing(conn.cursor()) as cur:
+        cur.execute('''SELECT name FROM popularity_type''')
+        popularity_types = [x[0] for x in cur.fetchall()]
+        current_date = datetime.datetime.now().date()
         for pd in popularity_data:
-            try:
-                cur.execute('''INSERT INTO artist_popularity (name, spotify_id,
-                            echo_nest_id,spotify_popularity, spotify_followers,
-                            echo_nest_hotttnesss, update_date) VALUES (%s,%s,%s,%s,
-                            %s,%s,%s)''', (pd['name'],pd['spotify_id'],
-                                pd['echo_nest_id'],pd['spotify_popularity'],
-                                pd['spotify_followers'],pd['hotttnesss'],
-                                datetime.datetime.now().date()))
-                conn.commit()
-            except psycopg2.IntegrityError as e:
-                conn.rollback()
-                print e
+            #if not any(v for k,v in dict((i, pd[i]) for i in popularity_types).iteritems()):
+            #    continue
+
+            cur.execute('''INSERT INTO popularity_point (artist_id, update_date)
+                        SELECT artist.id, %s FROM artist WHERE name = %s''',
+                        (current_date, pd['name']))
+
+            for pop_type in popularity_types:
+                if not pd[pop_type]:
+                    continue
+                cur.execute('''INSERT INTO popularity_value (popularity_point_id,
+                            popularity_type_id, value) SELECT pp.id, pt.id, %s
+                            FROM popularity_point pp, popularity_type pt WHERE
+                            pp.update_date = %s AND pp.artist_id = %s
+                            AND pt.name = %s''',
+                            (pd[pop_type], current_date, pd['id'], pop_type))
+            conn.commit()
     conn.close()
 
 
 def run():
+    print 'Artist Popularity Data'
     artists = get_artists_to_update()
     all_popularity_data = loop_through_artists(artists)
     upload_popularity_data(all_popularity_data)
 
+
 if __name__ == '__main__':
     run()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

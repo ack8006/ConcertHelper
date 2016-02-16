@@ -52,8 +52,10 @@ def get_artist_ids(alt_id='spotify'):
 def get_mbids():
     conn = start_db_connection()
     with closing(conn.cursor()) as cur:
-        cur.execute('''SELECT DISTINCT mbid FROM artists WHERE mbid IS NOT NULL
-                    AND spotify_id IS NULL''')
+        cur.execute('''SELECT DISTINCT mbidid FROM artist WHERE mbidid IS NOT NULL
+                    AND spotifyid IS NULL''')
+        #cur.execute('''SELECT DISTINCT mbid FROM artists WHERE mbid IS NOT NULL
+        #            AND spotify_id IS NULL''')
         data = [x[0] for x in cur.fetchall()]
     conn.close()
     return data
@@ -61,14 +63,15 @@ def get_mbids():
 def update_artist_db(id_pair):
     conn = start_db_connection()
     with closing(conn.cursor()) as cur:
-        cur.execute('''UPDATE artists SET spotify_id=%s, echo_nest_id = %s
-                    WHERE mbid=%s''', (id_pair[1],id_pair[2],id_pair[0]))
+        cur.execute('''UPDATE artist SET spotifyid=%s, echonestid = %s
+                    WHERE mbidid=%s''', (id_pair[1],id_pair[2],id_pair[0]))
         conn.commit()
         print 'Updated %s' %(id_pair[0])
     conn.close()
 
 
 def run():
+    print 'Artist ID Update'
     map(lambda x:update_artist_db(x), get_artist_ids())
 
 if __name__ == '__main__':

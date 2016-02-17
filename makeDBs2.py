@@ -87,7 +87,7 @@ with closing(conn.cursor()) as cur:
     cur.execute(sql)
 
     sql = '''CREATE TABLE stubhub_zone (
-            id SERIAL PRIMARY KEY,
+            id integer PRIMARY KEY,
             name VARCHAR(64) NOT NULL
             )'''
     cur.execute(sql)

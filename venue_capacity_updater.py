@@ -20,8 +20,7 @@ from time import sleep
 def get_venues_to_update():
     conn = start_db_connection()
     with closing(conn.cursor()) as cur:
-        cur.execute('''SELECT name, venue_state FROM venues
-                    WHERE sk_venue_id IS NULL''')
+        cur.execute('''SELECT name, state FROM venue WHERE skid IS NULL''')
         venues = cur.fetchall()
     conn.close()
     return venues
@@ -31,7 +30,6 @@ def request_id(venues):
     for venue in venues:
         sleep(2.5)
         venue, city = venue
-        #print
         print venue
         url = make_url(venue, city)
         try:
@@ -85,13 +83,13 @@ def upload_venue_capacity(venues):
         sk_venue_id, capacity = id_cap
         conn = start_db_connection()
         with closing(conn.cursor()) as cur:
-            cur.execute('''UPDATE venues
-                        SET sk_venue_id=%s, capacity=%s
+            cur.execute('''UPDATE venue SET skid=%s, capacity=%s
                         WHERE name=%s''', (sk_venue_id, capacity, venue))
             conn.commit()
         conn.close()
 
 def run():
+    print 'Venue Capacity Getter'
     venues = request_id(get_venues_to_update())
     upload_venue_capacity(venues)
 

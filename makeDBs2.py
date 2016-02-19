@@ -2,7 +2,8 @@ from dbconnection import start_db_connection
 from contextlib import closing
 
 
-conn = start_db_connection('local')
+#conn = start_db_connection('local')
+conn = start_db_connection('AWS')
 
 with closing(conn.cursor()) as cur:
 
@@ -34,8 +35,8 @@ with closing(conn.cursor()) as cur:
 
     sql = '''CREATE TABLE popularity_value (
             id SERIAL PRIMARY KEY,
-            popularity_point_id integer NOT NULL REFERENCES popularity_point(id) ON DELETE CASCADE,
-            popularity_type_id integer NOT NULL REFERENCES popularity_type(id) ON DELETE CASCADE,
+            pp_id integer NOT NULL REFERENCES popularity_point(id) ON DELETE CASCADE,
+            pt_id integer NOT NULL REFERENCES popularity_type(id) ON DELETE CASCADE,
             value numeric NOT NULL,
             UNIQUE(popularity_point_id, popularity_type_id)
             )'''
@@ -72,7 +73,7 @@ with closing(conn.cursor()) as cur:
 
     sql = '''CREATE TABLE stubhub_listing (
             id SERIAL PRIMARY KEY,
-            stubhub_id VARCHAR(16) NOT NULL,
+            stubhubid VARCHAR(16) NOT NULL,
             event_id integer NOT NULL REFERENCES event(id) ON DELETE CASCADE,
             UNIQUE(stubhub_id, event_id)
             )'''
@@ -80,7 +81,7 @@ with closing(conn.cursor()) as cur:
 
     sql = '''CREATE TABLE stubhub_point (
             id SERIAL PRIMARY KEY,
-            stubhub_listing_id integer NOT NULL REFERENCES stubhub_listing(id) ON DELETE CASCADE,
+            sl_id integer NOT NULL REFERENCES stubhub_listing(id) ON DELETE CASCADE,
             update_time timestamp without time zone NOT NULL,
             UNIQUE(stubhub_listing_id, update_time)
             )'''
@@ -94,8 +95,8 @@ with closing(conn.cursor()) as cur:
 
     sql = '''CREATE TABLE stubhub_price (
             id SERIAL PRIMARY KEY,
-            stubhub_point_id integer NOT NULL REFERENCES stubhub_point(id) ON DELETE CASCADE,
-            stubhub_zone_id integer NOT NULL REFERENCES stubhub_zone(id) ON DELETE CASCADE,
+            sp_id integer NOT NULL REFERENCES stubhub_point(id) ON DELETE CASCADE,
+            sz_id integer NOT NULL REFERENCES stubhub_zone(id) ON DELETE CASCADE,
             min_price real,
             max_price real,
             min_ticket_quantity integer,

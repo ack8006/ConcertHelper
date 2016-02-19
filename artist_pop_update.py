@@ -116,8 +116,8 @@ def upload_popularity_data(popularity_data):
             for pop_type in popularity_types:
                 if not pd[pop_type]:
                     continue
-                cur.execute('''INSERT INTO popularity_value (popularity_point_id,
-                            popularity_type_id, value) SELECT pp.id, pt.id, %s
+                cur.execute('''INSERT INTO popularity_value (pp_id,
+                            pt_id, value) SELECT pp.id, pt.id, %s
                             FROM popularity_point pp, popularity_type pt WHERE
                             pp.update_date = %s AND pp.artist_id = %s
                             AND pt.name = %s''',

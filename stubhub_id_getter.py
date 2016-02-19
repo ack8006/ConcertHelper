@@ -30,8 +30,8 @@ def get_events_to_update():
             JOIN Venue v ON v.id = e.venue_id
             LEFT JOIN stubhub_listing sl on e.id=sl.event_id
             JOIN popularity_point pp ON a.id=pp.artist_id
-            JOIN popularity_value pv ON pp.id=pv.popularity_point_id
-            JOIN popularity_type pt ON pt.id=pv.popularity_type_id
+            JOIN popularity_value pv ON pp.id=pv.pp_id
+            JOIN popularity_type pt ON pt.id=pv.pt_id
             WHERE sl.event_id IS NULL AND e.onsale_date < now()
             AND (pt.name = 'spotify_popularity' OR pt.name = 'echonest_hotttnesss')
             AND pp.id IN (SELECT id FROM (SELECT DISTINCT ON (artist_id) id, artist_id, update_date
@@ -162,10 +162,10 @@ def upload_stubhub_ids(event_ids):
     conn = start_db_connection()
     with closing(conn.cursor()) as cur:
         for event_id, stubhub_id in event_ids:
-            cur.execute('''INSERT INTO stubhub_listing (stubhub_id, event_id)
+            cur.execute('''INSERT INTO stubhub_listing (stubhubid, event_id)
                         SELECT %s, %s WHERE NOT EXISTS (SELECT * FROM stubhub_listing
-                        WHERE stubhub_id = %s OR event_id = %s)''', (stubhub_id,
-                        event_id, str(stubhub_id), str(event_id))
+                        WHERE stubhubid = %s OR event_id = %s)''', (stubhub_id,
+                        event_id, str(stubhub_id), str(event_id)))
 
             #cur.execute('''INSERT INTO stubhub_listing (stubhub_id, event_id)
             #            VALUES (%s, %s)''', (stubhub_id, event_id))

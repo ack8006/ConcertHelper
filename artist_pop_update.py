@@ -14,7 +14,7 @@ def get_artists_to_update():
     conn = start_db_connection()
     with closing(conn.cursor()) as cur:
         #SELECTS all artists that have either never been update or haven't been
-        #updated in greater than 7 days
+        #updated in greater than 6 days
 
         cur.execute('''SELECT id, name, spotifyid, echonestid FROM
                     (SELECT DISTINCT ON (a.id) a.id, a.name, a.spotifyid,
@@ -24,7 +24,7 @@ def get_artists_to_update():
                     WHERE (a.spotifyid IS NOT NULL AND a.spotifyid <> 'n/a') OR
                     (a.echonestid IS NOT NULL AND a.echonestid <> 'n/a')
                     GROUP BY a.id, a.name, a.spotifyid, a.echonestid) as foo
-                    WHERE (MAX IS NULL OR max < now()-'7 days'::interval);''')
+                    WHERE (MAX IS NULL OR max < now()-'6 days'::interval);''')
 
         data = cur.fetchall()
     conn.close()
@@ -44,7 +44,7 @@ def build_urls(ar_inf):
         urls['spotify'] = None
     return urls
 
-def request_data(url):
+def request_data(url, attempt=1):
     try:
         r = requests.get(url)
     except requests.exceptions.ConnectionError as e:
@@ -54,11 +54,15 @@ def request_data(url):
 
     if r.status_code == 200:
         return r.json()
+    elif attempt > 3:
+        return
     else:
         print 'Status Code: %s' %(r.status_code)
         print url
         print 'Sleeping'
-        sleep(5)
+        sleep(5*attempt)
+        request_data(url, attempt+1)
+
 
 def loop_through_artists(artists):
     all_popularity_data = []
@@ -74,6 +78,7 @@ def loop_through_artists(artists):
             pop_data['spotify_popularity'],pop_data['spotify_followers'] = None,None
         if urls['echonest']:
             pop_data['echonest_hotttnesss'] = parse_echonest(request_data(urls['echonest']))
+            pop_data['echonest_hotttnesss'] = pop_data['echonest_hotttnesss']*100
         else:
             pop_data['echonest_hotttnesss'] = None
         if pop_data:

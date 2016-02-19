@@ -85,7 +85,8 @@ if __name__ == '__main__':
     #print best_match_ratio('yankees', ['new york yankees', 'mets', 'knicks', 'rangers'])
     #print best_match_partial('yankees', ['new york yankees', 'mets', 'knicks', 'rangers'], 3)
     #print best_match_token('yankees of new york', ['new york yankees', 'mets', 'knicks', 'rangers'], 3)
-    print best_match_avg('yankees of new york', ['new york yankees', 'mets', 'knicks', 'rangers'], 3)
+    #print best_match_avg('yankees of new york', ['new york yankees', 'mets', 'knicks', 'rangers'], 3)
+    pass
 
 
 

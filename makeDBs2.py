@@ -20,7 +20,7 @@ with closing(conn.cursor()) as cur:
 
     sql = '''CREATE TABLE popularity_point (
             id SERIAL PRIMARY KEY,
-            artist_id integer NOT NULL REFERENCES artist(id),
+            artist_id integer NOT NULL REFERENCES artist(id) ON DELETE CASCADE,
             update_date date NOT NULL,
             UNIQUE(artist_id, update_date)
             )'''
@@ -34,8 +34,8 @@ with closing(conn.cursor()) as cur:
 
     sql = '''CREATE TABLE popularity_value (
             id SERIAL PRIMARY KEY,
-            popularity_point_id integer NOT NULL REFERENCES popularity_point(id),
-            popularity_type_id integer NOT NULL REFERENCES popularity_type(id),
+            popularity_point_id integer NOT NULL REFERENCES popularity_point(id) ON DELETE CASCADE,
+            popularity_type_id integer NOT NULL REFERENCES popularity_type(id) ON DELETE CASCADE,
             value numeric NOT NULL,
             UNIQUE(popularity_point_id, popularity_type_id)
             )'''
@@ -56,7 +56,7 @@ with closing(conn.cursor()) as cur:
 
     sql = '''CREATE TABLE event (
             id SERIAL PRIMARY KEY,
-            venue_id integer NOT NULL REFERENCES venue(id),
+            venue_id integer NOT NULL REFERENCES venue(id) ON DELETE CASCADE,
             bitID VARCHAR(16) NOT NULL UNIQUE,
             event_date timestamp without time zone,
             onsale_date timestamp without time zone
@@ -64,8 +64,8 @@ with closing(conn.cursor()) as cur:
     cur.execute(sql)
 
     sql = '''CREATE TABLE event_artist (
-            artist_id integer NOT NULL REFERENCES artist(id),
-            event_id integer NOT NULL REFERENCES event(id),
+            artist_id integer NOT NULL REFERENCES artist(id) ON DELETE CASCADE,
+            event_id integer NOT NULL REFERENCES event(id) ON DELETE CASCADE,
             PRIMARY KEY (artist_id, event_id)
             )'''
     cur.execute(sql)
@@ -73,14 +73,14 @@ with closing(conn.cursor()) as cur:
     sql = '''CREATE TABLE stubhub_listing (
             id SERIAL PRIMARY KEY,
             stubhub_id VARCHAR(16) NOT NULL,
-            event_id integer NOT NULL REFERENCES event(id),
+            event_id integer NOT NULL REFERENCES event(id) ON DELETE CASCADE,
             UNIQUE(stubhub_id, event_id)
             )'''
     cur.execute(sql)
 
     sql = '''CREATE TABLE stubhub_point (
             id SERIAL PRIMARY KEY,
-            stubhub_listing_id integer NOT NULL REFERENCES stubhub_listing(id),
+            stubhub_listing_id integer NOT NULL REFERENCES stubhub_listing(id) ON DELETE CASCADE,
             update_time timestamp without time zone NOT NULL,
             UNIQUE(stubhub_listing_id, update_time)
             )'''
@@ -94,8 +94,8 @@ with closing(conn.cursor()) as cur:
 
     sql = '''CREATE TABLE stubhub_price (
             id SERIAL PRIMARY KEY,
-            stubhub_point_id integer NOT NULL REFERENCES stubhub_point(id),
-            stubhub_zone_id integer NOT NULL REFERENCES stubhub_zone(id),
+            stubhub_point_id integer NOT NULL REFERENCES stubhub_point(id) ON DELETE CASCADE,
+            stubhub_zone_id integer NOT NULL REFERENCES stubhub_zone(id) ON DELETE CASCADE,
             min_price real,
             max_price real,
             min_ticket_quantity integer,
@@ -105,6 +105,13 @@ with closing(conn.cursor()) as cur:
             )'''
     cur.execute(sql)
 
+    sql = '''CREATE TABLE event_price (
+            id SERIAL PRIMARY KEY,
+            event_id integer NOT NULL REFERENCES event(id) ON DELETE CASCADE,
+            section_name VARCHAR(64),
+            min_price real,
+            max_price real
+            )'''
 
 
 

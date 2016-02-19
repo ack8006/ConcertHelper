@@ -17,6 +17,8 @@ from time import sleep
 #THIS DOES NOT PULL ARTISTS WITHOUT POPULARITY DATA
 #artists don't have popularity data without mbid_id
 
+#INSERT NEEDS PROTECTION
+
 def get_events_to_update():
     conn = start_db_connection()
     with closing(conn.cursor()) as cur:
@@ -85,7 +87,7 @@ def request_ids(event_info):
         payload = generate_payload(event_info, artist)
         spotify_event_id = get_event_id(payload, authentication_header, event_info, artist)
         if spotify_event_id:
-            print artist
+            print artist, event_id
             return (event_id, spotify_event_id)
 
 def generate_authentication_header():
@@ -98,17 +100,23 @@ def generate_payload(event_info, artist):
     payload = {}
     payload['point'] = gen_point(event_info[2],event_info[3])
     payload['state'] = event_info[1]
-    payload['q'] = gen_query(event_info[0], artist)
+    #payload['q'] = gen_query(artist, event_info[0])
+    payload['q'] = gen_query(artist)
+    #payload['venue'] = gen_query(event_info[0])
+    payload['EventDateLocal'] = event_info[4].strftime('%Y-%m-%d')
+    #print payload
+
     return payload
 
 def gen_point(lat, longitude):
     return str(lat)+','+str(longitude)
 
-def gen_query(venue, artist):
-    return '+'.join((venue+' '+artist).split())
+def gen_query(*args):
+    return '+'.join(' '.join(args).split())
 
 def get_event_id(payload, authentication_header, event_info, artist):
     sleep(6)
+
     base_uri = 'https://api.stubhub.com/search/catalog/events/v3'
     try:
         r = requests.get(base_uri, params=payload, headers=authentication_header)
@@ -126,15 +134,17 @@ def get_event_id(payload, authentication_header, event_info, artist):
 
 def matches(event, event_info, artist):
     def artist_matches():
-        performers = [x['name'] for x in event['performers']]
-        #print max(fuzzy.best_match_avg(artist, performers)) > 0.85
-        return max(fuzzy.best_match_avg(artist, performers)) > 0.85
+        if 'performers' in event:
+            performers = [x['name'] for x in event['performers']]
+            #print max(fuzzy.best_match_avg(artist, performers)) > 0.85
+            return max(fuzzy.best_match_avg(artist, performers)) > 0.85
+        return False
 
     def venue_matches():
         #print fuzzy.avg_all_techniques(event_info[0], event['displayAttributes']
-        #                                ['primaryName'])
+        #                                ['primaryName']) > 0.85
         return fuzzy.avg_all_techniques(event_info[0], event['displayAttributes']
-                                        ['primaryName'])
+                                        ['primaryName']) > 0.85
 
     def date_matches():
         #print event['eventDateLocal'][:10] == event_info[4].strftime('%Y-%m-%d')
@@ -153,7 +163,13 @@ def upload_stubhub_ids(event_ids):
     with closing(conn.cursor()) as cur:
         for event_id, stubhub_id in event_ids:
             cur.execute('''INSERT INTO stubhub_listing (stubhub_id, event_id)
-                        VALUES (%s, %s)''', (stubhub_id, event_id))
+                        SELECT %s, %s WHERE NOT EXISTS (SELECT * FROM stubhub_listing
+                        WHERE stubhub_id = %s OR event_id = %s)''', (stubhub_id,
+                        event_id, str(stubhub_id), str(event_id))
+
+            #cur.execute('''INSERT INTO stubhub_listing (stubhub_id, event_id)
+            #            VALUES (%s, %s)''', (stubhub_id, event_id))
+
             conn.commit()
             print 'StubHub Artist: ' + str(stubhub_id)
     conn.close()
@@ -165,6 +181,7 @@ def run():
         event_id = request_ids(event_info)
         if event_id:
             event_ids.append(event_id)
+            print
     upload_stubhub_ids(event_ids)
 
 

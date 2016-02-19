@@ -26,7 +26,7 @@ def get_price_data(stubhub_ids):
         #returns list of dicts
         price_data = request_price_data(payload,header)
         if price_data:
-            stubhub_prices[stubhub_id] = request_price_data(payload,header)
+            stubhub_prices[stubhub_id] = price_data
     return stubhub_prices
 
 def generate_header():
@@ -65,6 +65,7 @@ def upload_price_points(stubhub_prices):
             cur.execute('''INSERT INTO stubhub_point (stubhub_listing_id,
                         update_time) SELECT id, %s FROM stubhub_listing WHERE
                         stubhub_id = %s''', (current_datetime, stubhub_id))
+            conn.commit()
 
             for p in price_list:
                 cur.execute('''INSERT INTO stubhub_zone (id, name)
@@ -87,7 +88,7 @@ def upload_price_points(stubhub_prices):
     conn.close()
 
 def main():
-    upload_price_points(get_price_data(get_stubhub_ids()[0:1]))
+    upload_price_points(get_price_data(get_stubhub_ids()))
 
 
 if __name__ == '__main__':

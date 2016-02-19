@@ -38,7 +38,7 @@ with closing(conn.cursor()) as cur:
             pp_id integer NOT NULL REFERENCES popularity_point(id) ON DELETE CASCADE,
             pt_id integer NOT NULL REFERENCES popularity_type(id) ON DELETE CASCADE,
             value numeric NOT NULL,
-            UNIQUE(popularity_point_id, popularity_type_id)
+            UNIQUE(pp_id, pt_id)
             )'''
     cur.execute(sql)
 
@@ -75,7 +75,7 @@ with closing(conn.cursor()) as cur:
             id SERIAL PRIMARY KEY,
             stubhubid VARCHAR(16) NOT NULL,
             event_id integer NOT NULL REFERENCES event(id) ON DELETE CASCADE,
-            UNIQUE(stubhub_id, event_id)
+            UNIQUE(stubhubid, event_id)
             )'''
     cur.execute(sql)
 
@@ -83,7 +83,7 @@ with closing(conn.cursor()) as cur:
             id SERIAL PRIMARY KEY,
             sl_id integer NOT NULL REFERENCES stubhub_listing(id) ON DELETE CASCADE,
             update_time timestamp without time zone NOT NULL,
-            UNIQUE(stubhub_listing_id, update_time)
+            UNIQUE(sl_id, update_time)
             )'''
     cur.execute(sql)
 

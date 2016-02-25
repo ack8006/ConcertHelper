@@ -48,6 +48,7 @@ def request_price_data(payload, header):
         r = requests.get(base_uri, params=payload, headers=header)
         #print r.url
         if r.status_code/100 != 2:
+            print r.status_code
             return
         data = r.json()
         return get_zone_stats(data)

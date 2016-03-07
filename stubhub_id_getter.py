@@ -32,8 +32,8 @@ def get_events_to_update():
             JOIN popularity_point pp ON a.id=pp.artist_id
             JOIN popularity_value pv ON pp.id=pv.pp_id
             JOIN popularity_type pt ON pt.id=pv.pt_id
-            WHERE sl.event_id IS NULL AND e.onsale_date < now()
-            AND (pt.name = 'spotify_popularity' OR pt.name = 'echonest_hotttnesss')
+            WHERE sl.event_id IS NULL AND (e.onsale_date < (now()+'2 days'::interval))
+            AND (e.onsale_date > (now()-'7 days'::interval))
             AND pp.id IN (SELECT id FROM (SELECT DISTINCT ON (artist_id) id, artist_id, update_date
             FROM popularity_point ORDER BY artist_id, update_date DESC) as foo)
             GROUP BY a.name, v.name, v.state, v.latitude, v.longitude, e.event_date,
@@ -112,7 +112,8 @@ def gen_point(lat, longitude):
     return str(lat)+','+str(longitude)
 
 def gen_query(*args):
-    return '+'.join(' '.join(args).split())
+    return '"{}"'.format(' '.join(args))
+    #return '+'.join(' '.join(args).split())
 
 def get_event_id(payload, authentication_header, event_info, artist):
     sleep(6)
@@ -120,7 +121,7 @@ def get_event_id(payload, authentication_header, event_info, artist):
     base_uri = 'https://api.stubhub.com/search/catalog/events/v3'
     try:
         r = requests.get(base_uri, params=payload, headers=authentication_header)
-        #print r.url
+        print r.url
         if r.status_code != 200:
             return
         data = r.json()
@@ -135,16 +136,17 @@ def get_event_id(payload, authentication_header, event_info, artist):
 def matches(event, event_info, artist):
     def artist_matches():
         if 'performers' in event:
-            performers = [x['name'] for x in event['performers']]
-            #print max(fuzzy.best_match_avg(artist, performers)) > 0.85
-            return max(fuzzy.best_match_avg(artist, performers)) > 0.85
+            performers = [x['name'] for x in event['performersCollection']]
+            #print fuzzy.best_match_all(artist, performers)[0][1]
+            return fuzzy.best_match_all(artist, performers)[0][1] > 0.85
         return False
 
     def venue_matches():
-        #print fuzzy.avg_all_techniques(event_info[0], event['displayAttributes']
-        #                                ['primaryName']) > 0.85
-        return fuzzy.avg_all_techniques(event_info[0], event['displayAttributes']
-                                        ['primaryName']) > 0.85
+        #print fuzzy.best_match_all(event_info[0], [event['venue']['name']])[0][1]
+        return fuzzy.best_match_all(event_info[0], [event['venue']['name']])[0][1] > 0.85
+
+        #return fuzzy.best_match_all(event_info[0], [event['displayAttributes']
+        #                                ['primaryName']])[0][1] > 0.85
 
     def date_matches():
         #print event['eventDateLocal'][:10] == event_info[4].strftime('%Y-%m-%d')

@@ -33,7 +33,7 @@ def get_events_to_update():
             JOIN popularity_value pv ON pp.id=pv.pp_id
             JOIN popularity_type pt ON pt.id=pv.pt_id
             WHERE sl.event_id IS NULL AND (e.onsale_date < (now()+'2 days'::interval))
-            AND (e.onsale_date > (now()-'7 days'::interval))
+            AND (e.onsale_date > (now()-'14 days'::interval))
             AND pp.id IN (SELECT id FROM (SELECT DISTINCT ON (artist_id) id, artist_id, update_date
             FROM popularity_point ORDER BY artist_id, update_date DESC) as foo)
             GROUP BY a.name, v.name, v.state, v.latitude, v.longitude, e.event_date,
@@ -121,7 +121,7 @@ def get_event_id(payload, authentication_header, event_info, artist):
     base_uri = 'https://api.stubhub.com/search/catalog/events/v3'
     try:
         r = requests.get(base_uri, params=payload, headers=authentication_header)
-        print r.url
+        #print r.url
         if r.status_code != 200:
             return
         data = r.json()
@@ -135,7 +135,7 @@ def get_event_id(payload, authentication_header, event_info, artist):
 
 def matches(event, event_info, artist):
     def artist_matches():
-        if 'performers' in event:
+        if 'performersCollection' in event:
             performers = [x['name'] for x in event['performersCollection']]
             #print fuzzy.best_match_all(artist, performers)[0][1]
             return fuzzy.best_match_all(artist, performers)[0][1] > 0.85

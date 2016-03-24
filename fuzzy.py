@@ -74,9 +74,8 @@ def best_match_all(item_one, choices, limit = 1):
 def best_match_avg(item_one, choices, limit = 1):
     return get_best_scores(item_one, choices, limit, avg_all_techniques)
 
-
 def get_best_scores(item_one, choices, limit, match_function):
-    match_scores = map(lambda x: (x, match_function(item_one,x)), choices)
+    match_scores = map(lambda x: (x, match_function(item_one.decode('utf-8'),x)), choices)
     return sorted(match_scores, key = lambda x:x[1], reverse=True)[:limit]
 
 
@@ -86,6 +85,7 @@ if __name__ == '__main__':
     #print best_match_partial('yankees', ['new york yankees', 'mets', 'knicks', 'rangers'], 3)
     #print best_match_token('yankees of new york', ['new york yankees', 'mets', 'knicks', 'rangers'], 3)
     #print best_match_avg('yankees of new york', ['new york yankees', 'mets', 'knicks', 'rangers'], 3)
+    #print best_match_all('The Capital Theater', ['Capitol Theatre Port Chester'])
     pass
 
 

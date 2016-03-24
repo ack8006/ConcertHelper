@@ -84,6 +84,8 @@ def upload_venues_to_db(venue_data):
     conn = start_db_connection()
     with closing(conn.cursor()) as cur:
         for vn in venue_data:
+            if vn['country'] != 'United States':
+                vn['region'] = None
             cur.execute('''INSERT INTO venue (bitID, name, city, state,
                         latitude, longitude) SELECT %s,%s,%s,%s,%s,%s
                         WHERE NOT EXISTS (SELECT * FROM venue WHERE bitID = %s)''',
@@ -94,12 +96,19 @@ def upload_venues_to_db(venue_data):
 
 
 def run():
-    r_json = get_requested_json(request_page(make_onsale_url('new%20york,ny', 'YOUR_APP_ID')))
+    location_list = ['chicago,il', 'new%20york,ny', 'los%20angeles,ca',
+                     'san%20francisco,ca', 'boston,ma','austin,tx', 'portland,or',
+                     'denver,co', 'london,uk']
+    for location in location_list:
+        r_json = get_requested_json(request_page(
+            make_onsale_url(location, 'YOUR_APP_ID')))
+
+        upload_venues_to_db(get_venue_data(r_json))
+        upload_artists_to_db(get_artist_data(r_json))
+        upload_events_to_db(get_event_data(r_json))
+
     #r_json = test_json()
 
-    upload_venues_to_db(get_venue_data(r_json))
-    upload_artists_to_db(get_artist_data(r_json))
-    upload_events_to_db(get_event_data(r_json))
 
 
     #map(lambda x: upload_event_to_db(x), get_event_data(r_json))

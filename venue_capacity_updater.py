@@ -20,7 +20,8 @@ from time import sleep
 def get_venues_to_update():
     conn = start_db_connection()
     with closing(conn.cursor()) as cur:
-        cur.execute('''SELECT name, state FROM venue WHERE skid IS NULL
+        #cur.execute('''SELECT name, state FROM venue WHERE skid IS NULL
+        cur.execute('''SELECT name, city FROM venue WHERE skid IS NULL
                     AND capacity IS NULL''')
         venues = cur.fetchall()
     conn.close()

@@ -18,7 +18,9 @@ def get_stubhub_ids():
                     ON m.sl_id = sl.id
                     WHERE e.event_date >= now() AND
                     (e.onsale_date > (now() - interval '1 day')
-                    OR now()-m.MAX > interval '6 hours')''')
+                    OR now()-m.MAX > interval '8 hours'
+                    OR e.event_date < (now() + interval '1 day'))
+                    ''')
         stubhub_ids = [x[0] for x in cur.fetchall()]
     conn.close()
     print stubhub_ids

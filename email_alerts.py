@@ -88,7 +88,7 @@ def create_message(from_addr, to_addr, concerts, concert_header):
 if __name__ == '__main__':
     concerts = get_upcoming_concerts(7)
     concert_header = ['Artist', 'Onsale Date', 'Event Date', 'Venue',
-                      'Capacty', 'Echonest Popularity']
+                      'Capacity', 'City','State', 'Spotify Popularity']
     msg=create_message(from_addr, to_addr, concerts, concert_header)
     send_email(host, yahoo_user, b64decode(yahoo_pass), to_addr,
                from_addr, msg.as_string())

@@ -12,7 +12,7 @@ def get_upcoming_concerts(days=7):
     conn = start_db_connection('AWS')
     upcoming_concerts = None
     with closing(conn.cursor()) as cur:
-        cur.execute('''SELECT a.name, e.onsale_date, e.event_date, v.name, v.capacity, mr_pop.value
+        cur.execute('''SELECT a.name, e.onsale_date, e.event_date, v.name, v.capacity, v.city, v.state, mr_pop.value
                     FROM artist a
                     JOIN event_artist ea
                         ON ea.artist_id=a.id
@@ -23,10 +23,10 @@ def get_upcoming_concerts(days=7):
                     JOIN popularity_point pp
                         ON pp.artist_id = a.id
                     JOIN (SELECT pp.id, pv.pt_id, pv.value, foo.max
-                        FROM popularity_point pp
-                        JOIN popularity_value pv ON pv.pp_id=pp.id
-                        JOIN
-                        (SELECT pp.artist_id, pv.pt_id, MAX(pp.update_date)
+                            FROM popularity_point pp
+                            JOIN popularity_value pv ON pv.pp_id=pp.id
+                            JOIN
+                            (SELECT pp.artist_id, pv.pt_id, MAX(pp.update_date)
                         FROM popularity_point pp
                         JOIN popularity_value pv ON pv.pp_id = pp.id
                         GROUP BY pp.artist_id, pv.pt_id
@@ -35,9 +35,9 @@ def get_upcoming_concerts(days=7):
                             AND foo.pt_id=pv.pt_id
                             AND pp.update_date = foo.max) as mr_pop
                         ON pp.id=mr_pop.id
-                    WHERE mr_pop.pt_id=2 AND e.onsale_date > now()
-                    ORDER BY e.onsale_date, mr_pop.value DESC;
-                    ''')
+                    WHERE mr_pop.pt_id=1 AND e.onsale_date > now()
+                    ORDER BY e.onsale_date, mr_pop.value DESC''')
+
         upcoming_concerts = cur.fetchall()
     conn.close()
     return upcoming_concerts

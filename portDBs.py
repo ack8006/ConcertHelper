@@ -16,8 +16,8 @@ with closing(conn.cursor()) as cur:
     cur.execute('''SELECT * FROM popularity_point''')
     pp = cur.fetchall()
 
-    cur.execute('''SELECT * FROM popularity_type''')
-    pt = cur.fetchall()
+    #cur.execute('''SELECT * FROM popularity_type''')
+    #pt = cur.fetchall()
 
     cur.execute('''SELECT * FROM popularity_value''')
     pv=cur.fetchall()
@@ -43,12 +43,12 @@ conn = start_db_connection('AWS')
 with closing(conn.cursor()) as cur:
     for a in artists:
         cur.execute('''INSERT INTO artist (id, name, skid, mbidid, spotifyid,
-                    echonestid, biturl) VALUES(%s,%s,%s,%s,%s,%s,%s)''', (
+                    echonestid, biturl) VALUES(%s, %s,%s,%s,%s,%s,%s)''', (
                     a[0],a[1],a[2],a[3],a[4],a[5],a[6]))
     conn.commit()
 
     for z in v:
-        cur.execute('''INSERT INTO venue(id,bitid,skid,name,city,state,capacity,
+        cur.execute('''INSERT INTO venue(id, bitid,skid,name,city,state,capacity,
                     latitude,longitude) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)''',
                     (z[0],z[1],z[2],z[3],z[4],z[5],z[6],z[7],z[8]))
 
@@ -64,27 +64,27 @@ with closing(conn.cursor()) as cur:
     conn.commit()
 
     for z in pp:
-        cur.execute('''INSERT INTO popularity_point(id, artist_id, update_date)
+        cur.execute('''INSERT INTO popularity_point(id,artist_id, update_date)
                     VALUES (%s,%s,%s)''',(z[0],z[1],z[2]))
     conn.commit()
 
-    for z in pt:
-        cur.execute('''INSERT INTO popularity_type(id, name) VALUES (%s,%s)''',
-                    (z[0],z[1]))
-    conn.commit()
+    #for z in pt:
+    #    cur.execute('''INSERT INTO popularity_type(id, name) VALUES (%s,%s)''',
+    #                (0],z[1]))
+    #conn.commit()
 
     for z in pv:
-        cur.execute('''INSERT INTO popularity_value(id, pp_id, pt_id, value)
+        cur.execute('''INSERT INTO popularity_value(id,pp_id, pt_id, value)
                     VALUES(%s,%s,%s,%s)''',(z[0],z[1],z[2],z[3]))
     conn.commit()
 
     for z in sl:
-        cur.execute('''INSERT INTO stubhub_listing(id, stubhubid, event_id)
+        cur.execute('''INSERT INTO stubhub_listing(id,stubhubid, event_id)
                     VALUES(%s,%s,%s)''', (z[0],z[1],z[2]))
     conn.commit()
 
     for z in sp:
-        cur.execute('''INSERT INTO stubhub_point(id, sl_id, update_time)
+        cur.execute('''INSERT INTO stubhub_point(id,sl_id, update_time)
                     VALUES(%s,%s,%s)''', (z[0],z[1],z[2]))
     conn.commit()
 

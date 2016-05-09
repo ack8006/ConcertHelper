@@ -18,7 +18,7 @@ from time import sleep
 #    print [x for x in response if x[1]>.75]
 
 def get_venues_to_update():
-    conn = start_db_connection()
+    conn = start_db_connection('AWS')
     with closing(conn.cursor()) as cur:
         #cur.execute('''SELECT name, state FROM venue WHERE skid IS NULL
         cur.execute('''SELECT name, city FROM venue WHERE skid IS NULL
@@ -33,9 +33,11 @@ def request_id(venues):
         sleep(2.5)
         venue, city = venue
         print venue
-        url = make_url(venue, city)
+        #url = make_url(venue, city)
+        #print url
         try:
-            data = get_json(request_page(url))
+            #data = get_json(request_page(url))
+            data = get_json(request_page(venue, city))
         except ConnectionError as e:
             print e
             continue
@@ -49,17 +51,21 @@ def request_id(venues):
         venue_dict[venue] = sk_id
     return venue_dict
 
-def request_page(url):
-    return requests.get(url)
+def request_page(venue, city):
+    base_url = 'http://api.songkick.com/api/3.0/search/venues.json'
+    param_dict = {'apikey': song_kick_api,
+              'query': venue + ' ' + city}
+
+    return requests.get(base_url, params=param_dict)
 
 def get_json(r):
     return r.json()
 
-def make_url(venue, city):
-    query = venue.replace(' ','+')+'+'+city
-    url = ('http://api.songkick.com/api/3.0/search/venues.json?query=%s&'
-            'apikey=%s' %(query, song_kick_api))
-    return url
+#def make_url(venue, city):
+#    query = venue.replace(' ','+')+'+'+city
+#    url = ('http://api.songkick.com/api/3.0/search/venues.json?query=%s&'
+#            'apikey=%s' %(query, song_kick_api))
+#    return url
 
 def get_id_based_on_fuzzy(venue, city, possible_venue_info):
     pos_venue_names = get_pos_venue_names(possible_venue_info)
@@ -83,7 +89,7 @@ def get_pos_venue_names(possible_venue_info):
 def upload_venue_capacity(venues):
     for venue, id_cap in venues.iteritems():
         sk_venue_id, capacity = id_cap
-        conn = start_db_connection()
+        conn = start_db_connection('AWS')
         with closing(conn.cursor()) as cur:
             cur.execute('''UPDATE venue SET skid=%s, capacity=%s
                         WHERE name=%s''', (sk_venue_id, capacity, venue))

@@ -9,5 +9,5 @@ import stubhub_id_getter
 onsalegetter.run()
 artist_id_update.run()
 artist_pop_update.run()
-venue_capacity_updater.run()
 stubhub_id_getter.run()
+venue_capacity_updater.run()

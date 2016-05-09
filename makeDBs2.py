@@ -106,13 +106,16 @@ with closing(conn.cursor()) as cur:
             )'''
     cur.execute(sql)
 
-    sql = '''CREATE TABLE event_price (
-            id SERIAL PRIMARY KEY,
+    sql = '''CREATE TABLE event_price
+            (
+            id serial PRIMARY KEY,
             event_id integer NOT NULL REFERENCES event(id) ON DELETE CASCADE,
-            section_name VARCHAR(64),
+            sz_id integer REFERENCES stubhub_zone(id) ON DELETE CASCADE,
             min_price real,
-            max_price real
+            max_price real,
+            UNIQUE (event_id, sz_id)
             )'''
+    cur.execute(sql)
 
 
 

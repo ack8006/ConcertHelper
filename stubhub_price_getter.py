@@ -10,9 +10,12 @@ def get_stubhub_ids():
     conn = start_db_connection()
     with closing(conn.cursor()) as cur:
         cur.execute('''SELECT sl.stubhubid FROM stubhub_listing sl
+                    JOIN event e
+                    ON e.id=sl.event_id
                     LEFT JOIN (SELECT DISTINCT sl_id FROM stubhub_point) as b
                     ON sl.id = b.sl_id
                     WHERE b.sl_id IS NULL
+                    AND e.event_date > now()
                     UNION
                     SELECT sl.stubhubid FROM event e
                     JOIN stubhub_listing sl ON e.id=sl.event_id
@@ -103,7 +106,7 @@ def upload_price_points(stubhub_prices):
     conn.close()
 
 def main():
-    upload_price_points(get_price_data(get_stubhub_ids()[:100]))
+    upload_price_points(get_price_data(get_stubhub_ids()))
 
 
 if __name__ == '__main__':

@@ -20,7 +20,7 @@ from time import sleep
 #INSERT NEEDS PROTECTION
 
 def get_events_to_update():
-    conn = start_db_connection()
+    conn = start_db_connection('AWS')
     with closing(conn.cursor()) as cur:
         cur.execute('''SELECT a.name, v.name, v.state, v.latitude, v.longitude,
             e.event_date, e.onsale_date, AVG(pv.value), e.id
@@ -161,7 +161,7 @@ def matches(event, event_info, artist):
 
 
 def upload_stubhub_ids(event_ids):
-    conn = start_db_connection()
+    conn = start_db_connection('AWS')
     with closing(conn.cursor()) as cur:
         for event_id, stubhub_id in event_ids:
             cur.execute('''INSERT INTO stubhub_listing (stubhubid, event_id)
@@ -179,12 +179,14 @@ def upload_stubhub_ids(event_ids):
 def run():
     print 'Stubhub ID Getter'
     event_ids = []
+    #for event_info in parse_events(get_events_to_update()[534:700]):
     for event_info in parse_events(get_events_to_update()):
         event_id = request_ids(event_info)
         if event_id:
             event_ids.append(event_id)
             print
     upload_stubhub_ids(event_ids)
+    #print len(event_ids)
 
 
 if __name__ == '__main__':

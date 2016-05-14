@@ -9,7 +9,12 @@ from time import sleep
 def get_stubhub_ids():
     conn = start_db_connection()
     with closing(conn.cursor()) as cur:
-        cur.execute('''SELECT sl.stubhubid FROM event e
+        cur.execute('''SELECT sl.stubhubid FROM stubhub_listing sl
+                    LEFT JOIN (SELECT DISTINCT sl_id FROM stubhub_point) as b
+                    ON sl.id = b.sl_id
+                    WHERE b.sl_id IS NULL
+                    UNION
+                    SELECT sl.stubhubid FROM event e
                     JOIN stubhub_listing sl ON e.id=sl.event_id
                     JOIN
                     (SELECT MAX(update_time), sl_id FROM stubhub_point sp
@@ -18,8 +23,8 @@ def get_stubhub_ids():
                     ON m.sl_id = sl.id
                     WHERE e.event_date >= now() AND
                     (e.onsale_date > (now() - interval '1 day')
-                    OR now()-m.MAX > interval '8 hours'
-                    OR e.event_date < (now() + interval '1 day'))
+                    OR now()-m.MAX > interval '24 hours'
+                    OR e.event_date < (now() + interval '2 day'))
                     ''')
         stubhub_ids = [x[0] for x in cur.fetchall()]
     conn.close()
@@ -98,7 +103,7 @@ def upload_price_points(stubhub_prices):
     conn.close()
 
 def main():
-    upload_price_points(get_price_data(get_stubhub_ids()))
+    upload_price_points(get_price_data(get_stubhub_ids()[:100]))
 
 
 if __name__ == '__main__':

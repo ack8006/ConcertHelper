@@ -57,7 +57,7 @@ def generate_payload(stubhub_id):
     return payload
 
 def request_price_data(payload, header):
-    #sleep(6)
+    sleep(6)
     base_uri = 'https://api.stubhub.com/search/inventory/v1'
     try:
         r = requests.get(base_uri, params=payload, headers=header)

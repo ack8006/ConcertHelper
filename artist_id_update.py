@@ -50,7 +50,7 @@ def get_artist_ids(alt_id='spotify'):
 
 
 def get_mbids():
-    conn = start_db_connection()
+    conn = start_db_connection('AWS')
     with closing(conn.cursor()) as cur:
         cur.execute('''SELECT DISTINCT mbidid FROM artist WHERE mbidid IS NOT NULL
                     AND spotifyid IS NULL''')
@@ -61,7 +61,7 @@ def get_mbids():
     return data
 
 def update_artist_db(id_pair):
-    conn = start_db_connection()
+    conn = start_db_connection('AWS')
     with closing(conn.cursor()) as cur:
         cur.execute('''UPDATE artist SET spotifyid=%s, echonestid = %s
                     WHERE mbidid=%s''', (id_pair[1],id_pair[2],id_pair[0]))

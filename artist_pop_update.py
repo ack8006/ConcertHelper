@@ -24,7 +24,7 @@ def get_artists_to_update():
                     WHERE (a.spotifyid IS NOT NULL AND a.spotifyid <> 'n/a') OR
                     (a.echonestid IS NOT NULL AND a.echonestid <> 'n/a')
                     GROUP BY a.id, a.name, a.spotifyid, a.echonestid) as foo
-                    WHERE (MAX IS NULL OR max < now()-'6 days'::interval);''')
+                    WHERE (MAX IS NULL OR max < now()-'7 days'::interval);''')
 
         data = cur.fetchall()
     conn.close()

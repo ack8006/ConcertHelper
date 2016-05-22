@@ -38,22 +38,6 @@ def get_events_to_update():
             FROM popularity_point ORDER BY artist_id, update_date DESC) as foo)
             GROUP BY a.name, v.name, v.state, v.latitude, v.longitude, e.event_date,
             e.onsale_date, e.id''')
-
-        #cur.execute('''SELECT event_artists.artist, venues.name, venues.venue_state,
-        #            venues.latitude, venues.longitude, events.event_date,
-        #            events.onsale_date, artist_popularity.spotify_popularity,
-        #            artist_popularity.echo_nest_hotttnesss, events.bit_event_id
-        #            FROM events
-        #            INNER JOIN venues
-        #            ON events.bit_venue_id=venues.bit_venue_id
-        #            INNER JOIN event_artists
-        #            ON event_artists.bit_event_id = events.bit_event_id
-        #            INNER JOIN artist_popularity
-        #            ON artist_popularity.name=event_artists.artist
-        #            WHERE events.stubhub_id IS NULL AND
-        #            events.onsale_date < now()
-        #            ORDER BY events.event_date, events.onsale_date,
-        #            artist_popularity.echo_nest_hotttnesss DESC''')
         event_list = cur.fetchall()
     conn.close()
     return event_list
@@ -121,7 +105,7 @@ def get_event_id(payload, authentication_header, event_info, artist):
     base_uri = 'https://api.stubhub.com/search/catalog/events/v3'
     try:
         r = requests.get(base_uri, params=payload, headers=authentication_header)
-        #print r.url
+        print r.url
         if r.status_code != 200:
             return
         data = r.json()
@@ -136,7 +120,8 @@ def get_event_id(payload, authentication_header, event_info, artist):
 def matches(event, event_info, artist):
     def artist_matches():
         if 'performersCollection' in event:
-            performers = [x['name'] for x in event['performersCollection']]
+            performers = [x['name'] for x in event['performersCollection']
+                          if 'name' in x]
             #print fuzzy.best_match_all(artist, performers)[0][1]
             return fuzzy.best_match_all(artist, performers)[0][1] > 0.85
         return False

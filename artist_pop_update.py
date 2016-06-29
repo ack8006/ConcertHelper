@@ -16,7 +16,8 @@ def get_artists_to_update():
         #SELECTS all artists that have either never been update or haven't been
         #updated in greater than 6 days
 
-        cur.execute('''SELECT id, name, spotifyid, echonestid FROM
+        cur.execute('''SELECT id, name, spotifyid, echonestid
+                    FROM
                     (SELECT DISTINCT ON (a.id) a.id, a.name, a.spotifyid,
                     a.echonestid, MAX(pp.update_date)
                     FROM artist a LEFT JOIN popularity_point pp
@@ -76,11 +77,13 @@ def loop_through_artists(artists):
             pop_data['spotify_popularity'],pop_data['spotify_followers'] = pop,follow
         else:
             pop_data['spotify_popularity'],pop_data['spotify_followers'] = None,None
-        if urls['echonest']:
-            pop_data['echonest_hotttnesss'] = parse_echonest(request_data(urls['echonest']))
-            pop_data['echonest_hotttnesss'] = pop_data['echonest_hotttnesss']*100
-        else:
-            pop_data['echonest_hotttnesss'] = None
+        #if urls['echonest']:
+        #    pop_data['echonest_hotttnesss'] = parse_echonest(request_data(urls['echonest']))
+        #    pop_data['echonest_hotttnesss'] = pop_data['echonest_hotttnesss']*100
+        #else:
+        #    pop_data['echonest_hotttnesss'] = None
+        pop_data['echonest_hotttnesss'] = None
+
         if pop_data:
             pop_data['id'], pop_data['name'], pop_data['spotify_id'], pop_data['echo_nest_id'] = artist
         all_popularity_data.append(pop_data)

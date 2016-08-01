@@ -105,7 +105,7 @@ def get_event_id(payload, authentication_header, event_info, artist):
     base_uri = 'https://api.stubhub.com/search/catalog/events/v3'
     try:
         r = requests.get(base_uri, params=payload, headers=authentication_header)
-        print r.url
+        #print r.url
         if r.status_code != 200:
             return
         data = r.json()
@@ -164,7 +164,7 @@ def upload_stubhub_ids(event_ids):
 def run():
     print 'Stubhub ID Getter'
     event_ids = []
-    #for event_info in parse_events(get_events_to_update()[534:700]):
+    #for event_info in parse_events(get_events_to_update()[:150]):
     for event_info in parse_events(get_events_to_update()):
         event_id = request_ids(event_info)
         if event_id:

@@ -16,15 +16,14 @@ def get_artists_to_update():
         #SELECTS all artists that have either never been update or haven't been
         #updated in greater than 6 days
 
-        cur.execute('''SELECT id, name, spotifyid, echonestid
+        cur.execute('''SELECT id, name, spotifyid
                     FROM
                     (SELECT DISTINCT ON (a.id) a.id, a.name, a.spotifyid,
-                    a.echonestid, MAX(pp.update_date)
+                    MAX(pp.update_date)
                     FROM artist a LEFT JOIN popularity_point pp
                     on a.id=pp.artist_id
-                    WHERE (a.spotifyid IS NOT NULL AND a.spotifyid <> 'n/a') OR
-                    (a.echonestid IS NOT NULL AND a.echonestid <> 'n/a')
-                    GROUP BY a.id, a.name, a.spotifyid, a.echonestid) as foo
+                    WHERE (a.spotifyid IS NOT NULL AND a.spotifyid <> 'no_match')
+                    GROUP BY a.id, a.name, a.spotifyid) as foo
                     WHERE (MAX IS NULL OR max < now()-'7 days'::interval);''')
 
         data = cur.fetchall()
@@ -34,11 +33,11 @@ def get_artists_to_update():
 #takes data tuple
 def build_urls(ar_inf):
     urls = {}
-    if ar_inf[3] != 'n/a':
-        urls['echonest'] = ('http://developer.echonest.com/api/v4/artist/hotttnesss?api_key'
-                '=%s&id=%s&format=json' %(echo_nest_api, ar_inf[3]))
-    else:
-        urls['echonest'] = None
+    #if ar_inf[3] != 'n/a':
+    #    urls['echonest'] = ('http://developer.echonest.com/api/v4/artist/hotttnesss?api_key'
+    #            '=%s&id=%s&format=json' %(echo_nest_api, ar_inf[3]))
+    #else:
+    #    urls['echonest'] = None
     if ar_inf[2] != 'n/a':
         urls['spotify'] = 'https://api.spotify.com/v1/artists/%s' %(ar_inf[2])
     else:
@@ -85,7 +84,7 @@ def loop_through_artists(artists):
         pop_data['echonest_hotttnesss'] = None
 
         if pop_data:
-            pop_data['id'], pop_data['name'], pop_data['spotify_id'], pop_data['echo_nest_id'] = artist
+            pop_data['id'], pop_data['name'], pop_data['spotify_id'] = artist
         all_popularity_data.append(pop_data)
         print 'Downloaded: ' + pop_data['name']
     return all_popularity_data
@@ -131,7 +130,7 @@ def upload_popularity_data(popularity_data):
 
 def run():
     print 'Artist Popularity Data'
-    artists = get_artists_to_update()
+    artists = get_artists_to_update()[:5]
     all_popularity_data = loop_through_artists(artists)
     upload_popularity_data(all_popularity_data)
 

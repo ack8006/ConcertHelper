@@ -130,7 +130,7 @@ def upload_popularity_data(popularity_data):
 
 def run():
     print 'Artist Popularity Data'
-    artists = get_artists_to_update()[:5]
+    artists = get_artists_to_update()
     all_popularity_data = loop_through_artists(artists)
     upload_popularity_data(all_popularity_data)
 

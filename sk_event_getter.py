@@ -17,7 +17,7 @@ def get_songkick_response(venue_id, api_key, page=1):
     if r.status_code != 200:
         print r.status_code
         return
-    return r.json()
+    return r.text()
 
 def check_total_entries(data):
     return data['resultsPage']['totalEntries']

@@ -38,7 +38,7 @@ def get_artists_to_update():
 
 def parse_spotify2(data):
     if not data:
-        return None, None
+        return None, None, None
     sp_id = data['id']
     followers = data['followers']['total']
     pop = data['popularity']
@@ -93,7 +93,7 @@ def upload_popularity_data(popularity_data):
                 conn.commit()
             except psycopg2.IntegrityError as e:
                 print 'Attempted Multiple Upload', pd
-                conn.rolback()
+                conn.rollback()
     conn.close()
 
 def run():
